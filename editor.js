@@ -154,7 +154,8 @@
         if (img.getAttribute("src") === PHOTO_PLACEHOLDER) {
           img.setAttribute("src", defaultProfileSrc);
         }
-        syncPhotoUploadVisibility(false);
+        const currentSrc = img.getAttribute("src") || "";
+        syncPhotoUploadVisibility(Boolean(currentSrc) && currentSrc !== PHOTO_PLACEHOLDER);
         return;
       }
       img.setAttribute("src", photo);
