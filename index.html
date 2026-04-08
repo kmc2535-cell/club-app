@@ -3,137 +3,57 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>Haruma Norisue | KOSEN Student</title>
+    <title>Neon Club Reactor</title>
     <meta
       name="description"
-      content="則末悠真の自己紹介サイト。AI × Robotics、Companion Robot開発、学習ログ、プロジェクト進捗をまとめています。"
+      content="マイク入力に反応してブラウザ全体がクラブ演出になるローカル向けWebアプリ"
     />
     <link rel="stylesheet" href="./style.css" />
-    <style id="runtime-style"></style>
   </head>
   <body>
-    <div id="site-root" class="has-profile-photo">
-      <nav class="top-nav">
-        <a href="#about">About</a>
-        <a href="#projects">Projects</a>
-        <a href="#learning">Learning</a>
-        <a href="#contact">Contact</a>
-      </nav>
+    <canvas id="club-canvas" aria-hidden="true"></canvas>
 
-      <main class="container">
-        <header class="hero" id="top">
-          <div class="hero-media">
-            <img
-              class="profile-photo"
-              src="./profile.jpg"
-              alt="Profile"
-            />
-            <div class="photo-tools">
-              <label class="photo-upload">
-                Upload Photo
-                <input id="quick-photo-input" type="file" accept="image/*" />
-              </label>
-            </div>
-          </div>
-          <div class="hero-copy">
-            <p class="eyebrow">KOSEN Student | AI × Robotics</p>
-            <h1>則末 悠真 <span>/ Haruma Norisue</span></h1>
-            <p class="role">KOSEN Student (Kamiyama Marugoto KOSEN)</p>
-            <p class="lead">
-              人と共に暮らすコンパニオンロボットを目指して、AI × Roboticsを学びながら開発中です。<br />
-              Building a Companion Robot (in progress).
-            </p>
-            <div class="hero-actions">
-              <a class="btn primary" href="#contact">Contact</a>
-              <a class="btn" href="#projects">Projects</a>
-              <a class="btn" href="https://github.com/1haruma7" target="_blank" rel="noreferrer">GitHub</a>
-            </div>
-          </div>
-        </header>
-
-      <section class="card" id="about">
-        <h2>About</h2>
-        <p class="section-lead">短め自己紹介 / Short Bio</p>
-        <p>
-          神山まるごと高専1年。AI、Robotics、Physical AI、起業に興味があります。目標は、人と共に暮らす
-          Companion Robot を作ること。現在はPythonや機械学習の基礎を学びながら制作中です。
-        </p>
-      </section>
-
-      <section class="projects" id="projects">
-        <div class="section-head">
-          <h2>Projects</h2>
-          <p>途中でも公開して進捗を見せる / Share work in progress</p>
+    <div class="club-shell">
+      <header class="status-bar">
+        <div class="status-pill">
+          <span class="status-label">MIC</span>
+          <span id="mic-status" class="status-value">BOOTING</span>
         </div>
+        <div class="status-pill">
+          <span class="status-label">MODE</span>
+          <span id="intensity-status" class="status-value">IDLE FLASH</span>
+        </div>
+      </header>
 
-        <article class="project-card featured">
-          <div class="project-top">
-            <h3>Companion Robot</h3>
-            <span class="status building">Building</span>
-          </div>
-          <p>音声認識・画像認識・会話ができるロボットを目指すプロジェクト。</p>
-          <p><strong>Elements:</strong> 音声認識 / 画像認識 / 会話 / Raspberry Pi</p>
-          <p><strong>Tech:</strong> Python (learning), ML basics, Raspberry Pi</p>
-          <p><strong>Links:</strong> <a href="#">Coming soon</a></p>
-        </article>
-
+      <section class="mirror-rig" aria-label="Disco mirror ball">
+        <div class="mirror-cable"></div>
+        <div id="mirrorball" class="mirrorball">
+          <div class="mirror-core"></div>
+          <div class="mirror-glow"></div>
+        </div>
+        <div class="mirror-shadow"></div>
       </section>
 
-      <section class="grid-two">
-        <section class="card" id="learning">
-          <h2>What I'm Learning</h2>
-          <p class="section-lead">できることではなく、学習中の内容を明記しています。</p>
-          <ul class="check-list">
-            <li>Python</li>
-            <li>ML basics</li>
-            <li>Robotics basics</li>
-            <li>Raspberry Pi</li>
-            <li>Electronics basics</li>
-          </ul>
-        </section>
+      <div class="ambient-haze haze-left"></div>
+      <div class="ambient-haze haze-right"></div>
 
-        <section class="card" id="interests">
-          <h2>Interests / Values</h2>
-          <div class="chips">
-            <span>AI</span>
-            <span>Robotics</span>
-            <span>Startups</span>
-            <span>3D Printing</span>
-            <span>Future Tech</span>
-          </div>
-          <p>
-            創造性を持ってものづくりし、人とAIが共存できる未来を目指します。
-          </p>
-        </section>
-      </section>
+      <div id="permission-panel" class="permission-panel" data-state="info">
+        <p id="permission-text">
+          Chromeでマイク許可を出すと、周囲の音で演出がさらに激しくなります。
+        </p>
+        <ol id="permission-steps" class="permission-steps" hidden></ol>
+        <div id="permission-actions" class="permission-actions" hidden>
+          <button id="retry-mic-button" class="permission-button" type="button">
+            マイクを再試行
+          </button>
+        </div>
+      </div>
 
-      <section class="card" id="log">
-        <h2>Log / Notes</h2>
-        <p class="section-lead">継続している証拠を残すための更新ログ。</p>
-        <ul class="log-list">
-          <li>
-            <time datetime="2026-03-01">2026-03-01</time>
-            <div>
-              <strong>Companion Robot: 音声入出力の試作</strong>
-              <p>マイク入力から簡易応答までの流れをローカルで確認。</p>
-            </div>
-          </li>
-        </ul>
-      </section>
-
-        <section class="card contact" id="contact">
-          <h2>Contact</h2>
-          <p>気軽に連絡してください。プロジェクト相談やコラボ歓迎です。</p>
-          <ul>
-            <li>Email: your-email@example.com</li>
-            <li>GitHub: <a href="https://github.com/1haruma7" target="_blank" rel="noreferrer">@1haruma7</a></li>
-            <li>X (Twitter): <a href="https://x.com/nori47haru" target="_blank" rel="noreferrer">@nori47haru</a></li>
-            <li>Portfolio/Blog: <a href="https://note.com/brisk_quail2191/portal" target="_blank" rel="noreferrer">note</a></li>
-          </ul>
-        </section>
-      </main>
+      <div class="portrait-warning">
+        <span>横長画面での表示専用です</span>
+      </div>
     </div>
 
-    <script src="./editor.js"></script>
+    <script type="module" src="./main.js"></script>
   </body>
 </html>

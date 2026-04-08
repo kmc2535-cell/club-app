@@ -84,6 +84,7 @@
 
   let isEditing = false;
   let selected = null;
+  let autosaveTimer = null;
   const inlineTextTags = new Set([
     "H1",
     "H2",
@@ -219,6 +220,16 @@
     } catch (_err) {
       ui.target.textContent = "Save failed: storage is full.";
     }
+  }
+
+  function scheduleSave(delay = 350) {
+    if (autosaveTimer) {
+      clearTimeout(autosaveTimer);
+    }
+    autosaveTimer = setTimeout(() => {
+      saveState();
+      autosaveTimer = null;
+    }, delay);
   }
 
   function saveBaselineFromCurrent() {
@@ -382,6 +393,7 @@
     if (!isEditing) {
       setSelected(null);
       stripEditorArtifacts(siteRoot);
+      saveState();
     } else {
       ui.target.textContent = "Selected: none";
     }
@@ -419,6 +431,7 @@
     if (selected.contains(event.target) || selected === event.target) {
       ui.text.value = selected.textContent || "";
     }
+    scheduleSave();
   });
 
   toolbar.addEventListener("click", (event) => {
@@ -432,6 +445,7 @@
       return;
     }
     selected.textContent = ui.text.value;
+    scheduleSave();
   });
 
   ui.applyHtml.addEventListener("click", () => {
@@ -441,6 +455,7 @@
       return;
     }
     selected.innerHTML = ui.text.value;
+    scheduleSave();
   });
 
   ui.applyStyle.addEventListener("click", () => {
@@ -449,6 +464,7 @@
     const value = ui.styleValue.value.trim();
     if (!prop || !value) return;
     selected.style.setProperty(prop, value);
+    scheduleSave();
   });
 
   ui.clearStyle.addEventListener("click", () => {
@@ -456,11 +472,13 @@
     const prop = ui.styleProp.value.trim();
     if (!prop) return;
     selected.style.removeProperty(prop);
+    scheduleSave();
   });
 
   ui.imageUrl.addEventListener("change", () => {
     if (!selected || selected.tagName !== "IMG") return;
     selected.setAttribute("src", ui.imageUrl.value.trim());
+    scheduleSave();
   });
 
   ui.imageFile.addEventListener("change", () => {
@@ -489,6 +507,7 @@
     const prev = selected.previousElementSibling;
     if (!prev) return;
     selected.parentElement.insertBefore(selected, prev);
+    scheduleSave();
   });
 
   ui.moveDown.addEventListener("click", () => {
@@ -496,12 +515,14 @@
     const next = selected.nextElementSibling;
     if (!next) return;
     selected.parentElement.insertBefore(next, selected);
+    scheduleSave();
   });
 
   ui.duplicate.addEventListener("click", () => {
     if (!selected || !selected.parentElement) return;
     const clone = selected.cloneNode(true);
     selected.parentElement.insertBefore(clone, selected.nextSibling);
+    scheduleSave();
   });
 
   ui.deleteNode.addEventListener("click", () => {
@@ -509,6 +530,11 @@
     const node = selected;
     setSelected(null);
     node.remove();
+    scheduleSave();
+  });
+
+  window.addEventListener("beforeunload", () => {
+    saveState();
   });
 
   ui.save.addEventListener("click", saveState);
