@@ -10,11 +10,12 @@ const permissionActions = document.getElementById("permission-actions");
 const retryMicButton = document.getElementById("retry-mic-button");
 const mirrorball = document.getElementById("mirrorball");
 
-const DPR_LIMIT = 1.8;
-const BEAM_COUNT = 96;
-const PARTICLE_COUNT = 220;
-const ORB_COUNT = 24;
-const MIRROR_RAY_COUNT = 28;
+const DPR_LIMIT = 1.25;
+const BEAM_COUNT = 64;
+const PARTICLE_COUNT = 120;
+const ORB_COUNT = 14;
+const MIRROR_RAY_COUNT = 16;
+const VISUALIZER_BARS = 30;
 const NEON_HUES = [186, 206, 226, 274, 318, 336, 356, 98];
 
 const state = {
@@ -62,6 +63,7 @@ const orbs = Array.from({ length: ORB_COUNT }, (_, index) => createOrb(index));
 const mirrorRays = Array.from({ length: MIRROR_RAY_COUNT }, (_, index) =>
   createMirrorRay(index)
 );
+const visualizerLevels = Array.from({ length: VISUALIZER_BARS }, () => 0.18);
 
 function createBeam(index) {
   const layerRoll = Math.random();
@@ -224,7 +226,7 @@ function updateAudioMetrics() {
   }
 
   let flux = 0;
-  for (let i = 0; i < state.freqData.length; i += 8) {
+  for (let i = 0; i < state.freqData.length; i += 12) {
     flux += Math.abs(state.freqData[i] - state.prevFreqData[i]) / 255;
     state.prevFreqData[i] = state.freqData[i];
   }
@@ -233,7 +235,7 @@ function updateAudioMetrics() {
   state.bass = sampleBand(state.freqData, 0.0, 0.08);
   state.mid = sampleBand(state.freqData, 0.08, 0.28);
   state.treble = sampleBand(state.freqData, 0.28, 0.82);
-  state.spectrumFlux = clamp(flux / (state.freqData.length / 8), 0, 1);
+  state.spectrumFlux = clamp(flux / (state.freqData.length / 12), 0, 1);
 }
 
 function setPermissionUI({
@@ -487,9 +489,27 @@ function drawOrbs() {
   ctx.restore();
 }
 
+function visualizerLevelAt(index) {
+  if (state.audioReady && state.freqData) {
+    const startRatio = index / VISUALIZER_BARS;
+    const endRatio = (index + 1) / VISUALIZER_BARS;
+    const bucket = sampleBand(state.freqData, startRatio * 0.66, 0.02 + endRatio * 0.72);
+    return clamp(bucket * 1.22 + state.energy * 0.08, 0.05, 1);
+  }
+
+  return clamp(
+    0.12 +
+      state.randomEnergy * 0.28 +
+      Math.sin(state.time * 1.8 + index * 0.42) * 0.08 +
+      Math.cos(state.time * 0.9 + index * 0.25) * 0.05,
+    0.06,
+    0.48
+  );
+}
+
 function drawMirrorScatter() {
   const origin = mirrorOrigin();
-  const count = Math.floor(18 + state.energy * 14 + state.peak * 10);
+  const count = Math.floor(8 + state.energy * 9 + state.peak * 6);
 
   ctx.save();
   ctx.globalCompositeOperation = "screen";
@@ -506,12 +526,12 @@ function drawMirrorScatter() {
       state.height * (0.16 + ray.reach + state.energy * 0.12 + state.peak * 0.18);
     const endX = origin.x + Math.cos(angle) * distance;
     const endY = origin.y + Math.sin(angle) * distance;
-    const alpha = clamp(0.08 + state.energy * 0.08 + state.peak * 0.18, 0.06, 0.34);
+    const alpha = clamp(0.06 + state.energy * 0.06 + state.peak * 0.14, 0.05, 0.24);
     const hue = wrapHue(state.altHue + ray.hueOffset + Math.sin(spin) * 30);
 
     ctx.strokeStyle = `hsla(${hue} 100% 74% / ${alpha})`;
     ctx.lineWidth = ray.width * (0.42 + state.energy * 0.55 + state.peak * 0.35);
-    ctx.shadowBlur = 12 + state.bloom * 18;
+    ctx.shadowBlur = 8 + state.bloom * 10;
     ctx.shadowColor = `hsla(${hue} 100% 74% / ${alpha})`;
     ctx.beginPath();
     ctx.moveTo(origin.x, origin.y);
@@ -526,7 +546,7 @@ function drawLasers() {
   const origin = mirrorOrigin();
   const stageY = state.height * 0.68;
   const beamDrive = clamp(state.energy * 0.72 + state.peak * 0.58, 0, 1);
-  const activeBeamCount = Math.floor(lerp(32, BEAM_COUNT, Math.pow(beamDrive, 0.78)));
+  const activeBeamCount = Math.floor(lerp(18, BEAM_COUNT, Math.pow(beamDrive, 0.8)));
 
   ctx.save();
   ctx.globalCompositeOperation = "screen";
@@ -568,8 +588,8 @@ function drawLasers() {
     const hue = wrapHue(hueBase + beam.hueOffset + Math.sin(beam.life) * 26);
 
     ctx.strokeStyle = `hsla(${hue} 100% 63% / ${alpha * 0.32})`;
-    ctx.lineWidth = lineWidth * 2.6;
-    ctx.shadowBlur = 28 + state.bloom * 38;
+    ctx.lineWidth = lineWidth * 2.15;
+    ctx.shadowBlur = 16 + state.bloom * 20;
     ctx.shadowColor = `hsla(${hue} 100% 64% / ${alpha})`;
     ctx.beginPath();
     ctx.moveTo(localOriginX, localOriginY);
@@ -603,7 +623,7 @@ function drawLasers() {
 
       ctx.strokeStyle = `rgba(255, 255, 255, ${0.1 + state.peakFlash * 0.1})`;
       ctx.lineWidth = 1.2 + state.peak * 1.2;
-      ctx.shadowBlur = 26 + state.peakFlash * 26;
+      ctx.shadowBlur = 16 + state.peakFlash * 16;
       ctx.shadowColor = `hsla(${state.altHue} 100% 70% / ${0.18 + state.peakFlash * 0.12})`;
       ctx.beginPath();
       ctx.moveTo(origin.x, origin.y);
@@ -636,7 +656,7 @@ function drawParticles(delta) {
 
     const x = particle.x * state.width;
     const y = particle.y * state.height;
-    const radius = particle.radius * (0.6 + state.energy * 1.85 + state.peak * 0.55) / particle.z;
+    const radius = particle.radius * (0.56 + state.energy * 1.45 + state.peak * 0.4) / particle.z;
     const alpha = clamp(
       0.1 + state.energy * 0.18 + state.peak * 0.08 + (1 / particle.z) * 0.05,
       0.05,
@@ -648,11 +668,67 @@ function drawParticles(delta) {
         : wrapHue(state.paletteHue + particle.hueOffset);
 
     ctx.fillStyle = `hsla(${hue} 100% 72% / ${alpha})`;
-    ctx.shadowBlur = 18 + state.bloom * 20;
+    ctx.shadowBlur = 10 + state.bloom * 10;
     ctx.shadowColor = `hsla(${wrapHue(hue + 12)} 100% 75% / ${alpha})`;
     ctx.beginPath();
     ctx.arc(x, y, radius, 0, Math.PI * 2);
     ctx.fill();
+  }
+
+  ctx.restore();
+}
+
+function drawVisualizer() {
+  const totalWidth = Math.min(state.width * 0.62, 860);
+  const barGap = 7;
+  const barWidth = (totalWidth - barGap * (VISUALIZER_BARS - 1)) / VISUALIZER_BARS;
+  const baseX = (state.width - totalWidth) / 2;
+  const baseY = state.height - 52;
+  const maxHeight = Math.min(state.height * 0.26, 180);
+
+  ctx.save();
+  ctx.globalCompositeOperation = "screen";
+
+  const floorGlow = ctx.createRadialGradient(
+    state.width * 0.5,
+    baseY,
+    0,
+    state.width * 0.5,
+    baseY,
+    totalWidth * 0.55
+  );
+  floorGlow.addColorStop(0, `hsla(${state.altHue} 100% 64% / 0.18)`);
+  floorGlow.addColorStop(0.5, `hsla(${state.paletteHue} 100% 58% / 0.08)`);
+  floorGlow.addColorStop(1, "rgba(0, 0, 0, 0)");
+  ctx.fillStyle = floorGlow;
+  ctx.fillRect(baseX - 40, baseY - maxHeight, totalWidth + 80, maxHeight + 70);
+
+  for (let index = 0; index < VISUALIZER_BARS; index += 1) {
+    const target = visualizerLevelAt(index);
+    visualizerLevels[index] = lerp(visualizerLevels[index], target, 0.28);
+
+    const level = visualizerLevels[index];
+    const height = 14 + level * maxHeight * (0.7 + state.peak * 0.2);
+    const x = baseX + index * (barWidth + barGap);
+    const y = baseY - height;
+    const hue = wrapHue(
+      state.paletteHue + (index / VISUALIZER_BARS) * 180 + Math.sin(state.time * 0.9 + index) * 18
+    );
+
+    ctx.fillStyle = `hsla(${hue} 100% 64% / 0.2)`;
+    ctx.fillRect(x, y, barWidth, height);
+
+    const gradient = ctx.createLinearGradient(0, y, 0, baseY);
+    gradient.addColorStop(0, `rgba(255, 255, 255, ${0.6 + state.peak * 0.18})`);
+    gradient.addColorStop(0.2, `hsla(${hue} 100% 72% / 0.96)`);
+    gradient.addColorStop(1, `hsla(${wrapHue(hue + 24)} 100% 52% / 0.22)`);
+    ctx.fillStyle = gradient;
+    ctx.shadowBlur = 10 + state.bloom * 8;
+    ctx.shadowColor = `hsla(${hue} 100% 70% / 0.35)`;
+    ctx.fillRect(x, y, barWidth, height);
+
+    ctx.fillStyle = `rgba(255, 255, 255, ${0.4 + state.peak * 0.18})`;
+    ctx.fillRect(x, y, barWidth, Math.max(2, 2 + level * 4));
   }
 
   ctx.restore();
@@ -698,6 +774,7 @@ function draw() {
   drawMirrorScatter();
   drawLasers();
   drawParticles(1);
+  drawVisualizer();
   drawFlashOverlay();
 }
 
@@ -713,6 +790,7 @@ function tick(now) {
   drawMirrorScatter();
   drawLasers();
   drawParticles(delta);
+  drawVisualizer();
   drawFlashOverlay();
 
   requestAnimationFrame(tick);
@@ -804,8 +882,8 @@ async function setupAudio() {
 
     const audioContext = new AudioContextClass();
     const analyser = audioContext.createAnalyser();
-    analyser.fftSize = 2048;
-    analyser.smoothingTimeConstant = 0.74;
+    analyser.fftSize = 1024;
+    analyser.smoothingTimeConstant = 0.78;
 
     const source = audioContext.createMediaStreamSource(stream);
     source.connect(analyser);
