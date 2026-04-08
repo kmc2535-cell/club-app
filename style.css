@@ -1,13 +1,17 @@
 :root {
   color-scheme: dark;
-  --bg-1: #05060f;
-  --bg-2: #130016;
-  --bg-3: #001b2d;
-  --flash: 0.2;
-  --laser-hue: 195;
-  --mirror-hue: 188;
-  --glow-alpha: 0.75;
-  --spin-duration: 7s;
+  --bg-1: #02030a;
+  --bg-2: #100012;
+  --bg-3: #00142a;
+  --flash: 0.3;
+  --peak-flash: 0.2;
+  --laser-hue: 198;
+  --laser-hue-2: 320;
+  --laser-hue-3: 98;
+  --mirror-hue: 210;
+  --glow-alpha: 0.8;
+  --mirror-sheen: 0.66;
+  --spin-duration: 6.8s;
   --pulse-scale: 1;
   --status-glow: rgba(0, 255, 209, 0.5);
 }
@@ -28,9 +32,10 @@ body {
   font-family: "Avenir Next Condensed", "Helvetica Neue", "Hiragino Kaku Gothic ProN",
     sans-serif;
   background:
-    radial-gradient(circle at 50% 20%, rgba(255, 255, 255, calc(var(--flash) * 0.2)), transparent 30%),
-    radial-gradient(circle at 18% 14%, hsla(calc(var(--laser-hue) + 90) 95% 58% / 0.5), transparent 28%),
-    radial-gradient(circle at 82% 18%, hsla(calc(var(--laser-hue) - 40) 98% 60% / 0.48), transparent 25%),
+    radial-gradient(circle at 50% 18%, rgba(255, 255, 255, calc(var(--flash) * 0.18)), transparent 26%),
+    radial-gradient(circle at 15% 18%, hsla(var(--laser-hue) 100% 58% / 0.52), transparent 26%),
+    radial-gradient(circle at 82% 14%, hsla(var(--laser-hue-2) 100% 64% / 0.5), transparent 24%),
+    radial-gradient(circle at 50% 0%, hsla(var(--laser-hue-3) 100% 52% / calc(var(--peak-flash) * 0.26)), transparent 28%),
     linear-gradient(180deg, var(--bg-2), var(--bg-1) 55%, #000 100%);
   color: #f4f8ff;
 }
@@ -47,22 +52,22 @@ body::before {
   background:
     repeating-linear-gradient(
       90deg,
-      rgba(255, 255, 255, 0.045) 0 1px,
-      transparent 1px 82px
+      rgba(255, 255, 255, 0.04) 0 1px,
+      transparent 1px 88px
     ),
     repeating-linear-gradient(
       180deg,
       rgba(255, 255, 255, 0.03) 0 1px,
-      transparent 1px 62px
+      transparent 1px 66px
     );
   mix-blend-mode: screen;
-  opacity: calc(0.18 + var(--flash) * 0.16);
+  opacity: calc(0.16 + var(--flash) * 0.14);
 }
 
 body::after {
   background:
-    radial-gradient(circle at 50% -10%, rgba(255, 255, 255, calc(var(--flash) * 0.65)), transparent 28%),
-    radial-gradient(circle at center, transparent 45%, rgba(0, 0, 0, 0.65) 100%);
+    radial-gradient(circle at 50% -6%, rgba(255, 255, 255, calc(var(--peak-flash) * 0.48)), transparent 22%),
+    radial-gradient(circle at center, transparent 40%, rgba(0, 0, 0, 0.68) 100%);
 }
 
 #club-canvas {
@@ -91,9 +96,9 @@ body::after {
 
 .status-pill {
   padding: 10px 14px;
-  border: 1px solid rgba(255, 255, 255, 0.12);
+  border: 1px solid rgba(255, 255, 255, 0.14);
   border-radius: 999px;
-  background: rgba(7, 11, 24, 0.46);
+  background: rgba(7, 11, 24, 0.44);
   backdrop-filter: blur(10px);
   box-shadow:
     0 0 25px rgba(0, 0, 0, 0.35),
@@ -113,7 +118,7 @@ body::after {
 .status-value {
   font-size: 13px;
   color: white;
-  text-shadow: 0 0 14px rgba(255, 255, 255, 0.45);
+  text-shadow: 0 0 16px rgba(255, 255, 255, 0.48);
 }
 
 .permission-panel {
@@ -228,8 +233,8 @@ body::after {
   position: absolute;
   top: 0;
   left: 50%;
-  width: 340px;
-  height: 270px;
+  width: 430px;
+  height: 332px;
   transform: translateX(-50%);
   z-index: 5;
 }
@@ -239,24 +244,65 @@ body::after {
   top: 0;
   left: 50%;
   width: 4px;
-  height: 68px;
+  height: 84px;
   transform: translateX(-50%);
-  background: linear-gradient(180deg, rgba(255, 255, 255, 0.95), rgba(160, 194, 255, 0.1));
-  box-shadow: 0 0 18px rgba(255, 255, 255, 0.35);
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.96), rgba(120, 226, 255, 0.24), rgba(255, 32, 148, 0.06));
+  box-shadow:
+    0 0 18px rgba(255, 255, 255, 0.35),
+    0 0 24px hsla(var(--laser-hue) 100% 65% / 0.22);
+  animation: cable-sway 4.4s ease-in-out infinite;
 }
 
 .mirrorball {
   position: absolute;
-  top: 54px;
+  top: 68px;
   left: 50%;
-  width: 164px;
-  height: 164px;
-  margin-left: -82px;
+  width: 196px;
+  height: 196px;
+  margin-left: -98px;
   border-radius: 50%;
   transform: scale(var(--pulse-scale));
   filter:
-    drop-shadow(0 0 20px hsla(var(--mirror-hue) 100% 60% / 0.4))
-    drop-shadow(0 0 52px hsla(calc(var(--mirror-hue) + 36) 100% 62% / calc(var(--glow-alpha) * 0.7)));
+    drop-shadow(0 0 26px hsla(var(--mirror-hue) 100% 72% / calc(var(--glow-alpha) * 0.6)))
+    drop-shadow(0 0 70px hsla(var(--laser-hue-2) 100% 66% / calc(var(--glow-alpha) * 0.42)))
+    drop-shadow(0 18px 26px rgba(0, 0, 0, 0.38));
+}
+
+.mirrorball::before,
+.mirrorball::after {
+  content: "";
+  position: absolute;
+  inset: -10%;
+  border-radius: 50%;
+  pointer-events: none;
+}
+
+.mirrorball::before {
+  background:
+    conic-gradient(
+      from 0deg,
+      transparent 0 10%,
+      hsla(var(--laser-hue) 100% 64% / calc(var(--peak-flash) * 0.6)) 12% 18%,
+      transparent 22% 40%,
+      hsla(var(--laser-hue-2) 100% 68% / calc(var(--glow-alpha) * 0.45)) 44% 52%,
+      transparent 58% 78%,
+      hsla(var(--laser-hue-3) 100% 60% / calc(var(--peak-flash) * 0.55)) 82% 90%,
+      transparent 100%
+    );
+  mix-blend-mode: screen;
+  filter: blur(8px);
+  animation: mirror-orbit calc(var(--spin-duration) * 0.55) linear infinite;
+}
+
+.mirrorball::after {
+  inset: -28% -38%;
+  background:
+    radial-gradient(circle at center, rgba(255, 255, 255, calc(var(--peak-flash) * 0.52)), transparent 18%),
+    radial-gradient(circle at 50% 50%, hsla(var(--laser-hue) 100% 68% / 0.22), transparent 42%),
+    radial-gradient(circle at 48% 54%, hsla(var(--laser-hue-2) 100% 70% / 0.2), transparent 56%);
+  filter: blur(20px);
+  mix-blend-mode: screen;
 }
 
 .mirror-core,
@@ -269,30 +315,47 @@ body::after {
   inset: 0;
   border-radius: 50%;
   overflow: hidden;
-  border: 1px solid rgba(255, 255, 255, 0.36);
+  border: 1px solid rgba(255, 255, 255, 0.42);
   background:
-    radial-gradient(circle at 32% 24%, rgba(255, 255, 255, 0.98), rgba(255, 255, 255, 0.08) 18%, transparent 28%),
-    radial-gradient(circle at 68% 62%, rgba(255, 255, 255, 0.4), transparent 24%),
+    radial-gradient(circle at 28% 20%, rgba(255, 255, 255, 0.98), rgba(255, 255, 255, 0.24) 10%, transparent 20%),
+    radial-gradient(circle at 34% 28%, hsla(var(--laser-hue) 100% 84% / calc(var(--mirror-sheen) * 0.64)), transparent 20%),
+    radial-gradient(circle at 70% 34%, hsla(var(--laser-hue-2) 100% 72% / calc(var(--glow-alpha) * 0.35)), transparent 24%),
+    radial-gradient(circle at 48% 70%, rgba(255, 255, 255, 0.22), transparent 24%),
+    linear-gradient(145deg, rgba(255, 255, 255, 0.26), rgba(7, 12, 28, 0.2)),
     repeating-linear-gradient(
       0deg,
-      hsla(calc(var(--mirror-hue) + 25) 100% 91% / 0.8) 0 8px,
-      hsla(calc(var(--mirror-hue) - 18) 84% 58% / 0.8) 8px 16px
+      rgba(255, 255, 255, 0.2) 0 1px,
+      transparent 1px 18px
     ),
     repeating-linear-gradient(
       90deg,
-      rgba(255, 255, 255, 0.94) 0 8px,
-      rgba(126, 180, 255, 0.28) 8px 16px
+      rgba(255, 255, 255, 0.16) 0 1px,
+      transparent 1px 18px
+    ),
+    linear-gradient(
+      135deg,
+      hsla(var(--mirror-hue) 22% 76% / 0.92),
+      hsla(calc(var(--mirror-hue) + 40) 32% 52% / 0.92) 24%,
+      hsla(calc(var(--mirror-hue) - 20) 34% 28% / 0.92) 52%,
+      hsla(calc(var(--mirror-hue) + 70) 46% 64% / 0.9) 76%,
+      hsla(calc(var(--mirror-hue) + 8) 26% 18% / 0.96)
     );
   background-size:
     auto,
     auto,
-    100% 100%,
+    auto,
+    auto,
+    auto,
+    18px 18px,
+    18px 18px,
     100% 100%;
   box-shadow:
-    inset -18px -26px 36px rgba(0, 0, 0, 0.5),
+    inset -28px -34px 42px rgba(0, 0, 0, 0.52),
     inset 18px 24px 28px rgba(255, 255, 255, 0.26),
-    inset 0 0 40px hsla(var(--mirror-hue) 100% 85% / 0.22);
-  animation: mirror-spin var(--spin-duration) linear infinite;
+    inset 0 0 46px hsla(var(--mirror-hue) 100% 86% / 0.28);
+  animation:
+    mirror-spin var(--spin-duration) linear infinite,
+    mirror-grid-drift calc(var(--spin-duration) * 0.42) linear infinite;
 }
 
 .mirror-core::before,
@@ -305,8 +368,9 @@ body::after {
 
 .mirror-core::before {
   background:
-    radial-gradient(circle at 50% -10%, rgba(255, 255, 255, 0.95), transparent 32%),
-    radial-gradient(circle at 50% 120%, rgba(0, 0, 0, 0.56), transparent 34%);
+    radial-gradient(circle at 50% -10%, rgba(255, 255, 255, 0.94), transparent 32%),
+    radial-gradient(circle at 50% 118%, rgba(0, 0, 0, 0.62), transparent 34%),
+    radial-gradient(ellipse at 50% 50%, transparent 48%, rgba(255, 255, 255, 0.14) 49%, transparent 56%);
   mix-blend-mode: screen;
 }
 
@@ -314,73 +378,92 @@ body::after {
   background:
     repeating-linear-gradient(
       135deg,
-      transparent 0 14px,
-      rgba(255, 255, 255, 0.16) 14px 16px,
-      transparent 16px 30px
+      transparent 0 16px,
+      rgba(255, 255, 255, 0.16) 16px 18px,
+      transparent 18px 34px
     ),
     repeating-linear-gradient(
       -135deg,
-      transparent 0 14px,
-      rgba(255, 255, 255, 0.12) 14px 16px,
-      transparent 16px 30px
+      transparent 0 16px,
+      rgba(255, 255, 255, 0.12) 16px 18px,
+      transparent 18px 34px
+    ),
+    conic-gradient(
+      from 0deg,
+      rgba(255, 255, 255, 0.22),
+      transparent 18%,
+      hsla(var(--laser-hue) 100% 70% / 0.16),
+      transparent 40%,
+      hsla(var(--laser-hue-2) 100% 72% / 0.18),
+      transparent 64%,
+      hsla(var(--laser-hue-3) 100% 60% / 0.14),
+      rgba(255, 255, 255, 0.18)
     );
   mix-blend-mode: soft-light;
-  opacity: 0.9;
+  opacity: 0.94;
+  animation: mirror-flare-shift calc(var(--spin-duration) * 0.65) linear infinite reverse;
 }
 
 .mirror-glow {
-  inset: -18%;
+  inset: -24%;
   border-radius: 50%;
   background:
-    radial-gradient(circle at center, hsla(var(--mirror-hue) 100% 70% / calc(var(--glow-alpha) * 0.75)), transparent 42%),
+    radial-gradient(circle at center, hsla(var(--mirror-hue) 100% 76% / calc(var(--glow-alpha) * 0.68)), transparent 30%),
     conic-gradient(
       from 0deg,
-      hsla(calc(var(--mirror-hue) - 34) 100% 58% / 0.55),
-      transparent 24%,
-      hsla(calc(var(--mirror-hue) + 48) 100% 70% / 0.7),
-      transparent 58%,
-      hsla(calc(var(--mirror-hue) + 8) 100% 66% / 0.65),
-      transparent 100%
+      hsla(var(--laser-hue) 100% 64% / 0.54),
+      transparent 20%,
+      hsla(var(--laser-hue-2) 100% 70% / 0.72),
+      transparent 46%,
+      hsla(var(--laser-hue-3) 100% 58% / 0.6),
+      transparent 72%,
+      rgba(255, 255, 255, calc(var(--peak-flash) * 0.55))
     );
   mix-blend-mode: screen;
-  filter: blur(16px);
+  filter: blur(18px);
   animation:
-    mirror-orbit calc(var(--spin-duration) * 0.55) linear infinite reverse,
-    mirror-breathe 1.3s ease-in-out infinite;
+    mirror-orbit calc(var(--spin-duration) * 0.48) linear infinite reverse,
+    mirror-breathe 1.2s ease-in-out infinite;
 }
 
 .mirror-shadow {
   left: 50%;
-  top: 160px;
-  width: 320px;
-  height: 160px;
+  top: 186px;
+  width: 380px;
+  height: 190px;
   transform: translateX(-50%);
   background:
-    radial-gradient(circle at 50% 0%, hsla(var(--mirror-hue) 100% 66% / 0.34), transparent 42%),
-    linear-gradient(180deg, rgba(0, 0, 0, 0.18), transparent 80%);
-  filter: blur(18px);
-  opacity: calc(0.38 + var(--glow-alpha) * 0.35);
+    radial-gradient(circle at 50% 0%, hsla(var(--mirror-hue) 100% 70% / 0.36), transparent 42%),
+    radial-gradient(circle at 38% 18%, hsla(var(--laser-hue) 100% 64% / calc(var(--peak-flash) * 0.3)), transparent 24%),
+    radial-gradient(circle at 62% 24%, hsla(var(--laser-hue-2) 100% 68% / calc(var(--glow-alpha) * 0.2)), transparent 28%),
+    linear-gradient(180deg, rgba(0, 0, 0, 0.16), transparent 78%);
+  filter: blur(20px);
+  opacity: calc(0.42 + var(--glow-alpha) * 0.36);
 }
 
 .ambient-haze {
   position: absolute;
-  top: 12%;
-  width: 38vw;
-  height: 56vh;
+  top: 8%;
+  width: 42vw;
+  height: 58vh;
   border-radius: 50%;
-  filter: blur(54px);
+  filter: blur(60px);
   mix-blend-mode: screen;
-  opacity: calc(0.16 + var(--flash) * 0.22);
+  opacity: calc(0.22 + var(--flash) * 0.18 + var(--peak-flash) * 0.18);
 }
 
 .haze-left {
-  left: -10vw;
-  background: radial-gradient(circle, hsla(calc(var(--laser-hue) + 75) 100% 58% / 0.6), transparent 58%);
+  left: -12vw;
+  background:
+    radial-gradient(circle, hsla(var(--laser-hue) 100% 58% / 0.68), transparent 54%),
+    radial-gradient(circle at 60% 38%, hsla(var(--laser-hue-3) 100% 56% / 0.34), transparent 36%);
 }
 
 .haze-right {
-  right: -10vw;
-  background: radial-gradient(circle, hsla(calc(var(--laser-hue) - 42) 100% 58% / 0.52), transparent 58%);
+  right: -12vw;
+  background:
+    radial-gradient(circle, hsla(var(--laser-hue-2) 100% 60% / 0.62), transparent 54%),
+    radial-gradient(circle at 40% 42%, hsla(var(--laser-hue) 100% 62% / 0.28), transparent 34%);
 }
 
 .portrait-warning {
@@ -405,15 +488,59 @@ body::after {
   }
 }
 
+@keyframes mirror-grid-drift {
+  from {
+    background-position:
+      0 0,
+      0 0,
+      0 0,
+      0 0,
+      0 0,
+      0 0,
+      0 0,
+      0 0;
+  }
+  to {
+    background-position:
+      0 0,
+      0 0,
+      0 0,
+      0 0,
+      0 0,
+      18px 36px,
+      36px 18px,
+      0 0;
+  }
+}
+
+@keyframes mirror-flare-shift {
+  from {
+    transform: rotate(0deg) scale(1);
+  }
+  to {
+    transform: rotate(360deg) scale(1.04);
+  }
+}
+
 @keyframes mirror-breathe {
   0%,
   100% {
-    opacity: 0.7;
-    transform: scale(0.96);
+    opacity: 0.72;
+    transform: scale(0.95);
   }
   50% {
     opacity: 1;
     transform: scale(1.08);
+  }
+}
+
+@keyframes cable-sway {
+  0%,
+  100% {
+    transform: translateX(-50%) rotate(0deg);
+  }
+  50% {
+    transform: translateX(-50%) rotate(1deg);
   }
 }
 
