@@ -265,19 +265,21 @@ function updateEnergy(delta) {
   updateFallbackEnergy(delta);
 
   state.smoothedVolume = lerp(state.smoothedVolume, state.volume, 0.18);
+  const volumeLift = Math.pow(clamp(state.smoothedVolume * 3.2, 0, 1.5), 1.35);
 
   const audioImpact =
-    state.smoothedVolume * 3.4 + state.bass * 1.3 + state.mid * 0.82 + state.treble * 0.72;
+    volumeLift * 1.85 + state.smoothedVolume * 2.2 + state.bass * 1.3 + state.mid * 0.82 + state.treble * 0.72;
   state.runningAudioAverage = lerp(state.runningAudioAverage, audioImpact, 0.032);
 
   const deltaBoost = Math.max(0, audioImpact - state.runningAudioAverage);
   const surgeTarget = clamp(
-    deltaBoost * 1.7 + state.spectrumFlux * 1.4 + state.bass * 0.38,
+    deltaBoost * 1.7 + state.spectrumFlux * 1.4 + state.bass * 0.38 + volumeLift * 0.34,
     0,
     1.35
   );
   const peakTarget = clamp(
-    state.smoothedVolume * 1.7 +
+    volumeLift * 1.15 +
+      state.smoothedVolume * 1.7 +
       state.bass * 1.42 +
       state.spectrumFlux * 1.24 +
       deltaBoost * 2.05 -
@@ -289,7 +291,7 @@ function updateEnergy(delta) {
   state.surge = lerp(state.surge, surgeTarget, surgeTarget > state.surge ? 0.18 : 0.06);
   state.peak = lerp(state.peak, peakTarget, peakTarget > state.peak ? 0.22 : 0.05);
   state.targetEnergy = clamp(
-    state.randomEnergy * 0.88 + audioImpact * 0.86 + state.surge * 0.22,
+    state.randomEnergy * 0.82 + audioImpact * 0.92 + state.surge * 0.24 + volumeLift * 0.22,
     0.24,
     1.52
   );
@@ -509,7 +511,7 @@ function visualizerLevelAt(index) {
 
 function drawMirrorScatter() {
   const origin = mirrorOrigin();
-  const count = Math.floor(8 + state.energy * 9 + state.peak * 6);
+  const count = Math.floor(8 + state.energy * 9 + state.peak * 6 + state.smoothedVolume * 14);
 
   ctx.save();
   ctx.globalCompositeOperation = "screen";
@@ -523,10 +525,15 @@ function drawMirrorScatter() {
       Math.cos(spin * 1.12) * 0.1 +
       (index / count - 0.5) * 2.2;
     const distance =
-      state.height * (0.16 + ray.reach + state.energy * 0.12 + state.peak * 0.18);
+      state.height *
+      (0.16 + ray.reach + state.energy * 0.12 + state.peak * 0.18 + state.smoothedVolume * 0.12);
     const endX = origin.x + Math.cos(angle) * distance;
     const endY = origin.y + Math.sin(angle) * distance;
-    const alpha = clamp(0.06 + state.energy * 0.06 + state.peak * 0.14, 0.05, 0.24);
+    const alpha = clamp(
+      0.06 + state.energy * 0.06 + state.peak * 0.14 + state.smoothedVolume * 0.12,
+      0.05,
+      0.34
+    );
     const hue = wrapHue(state.altHue + ray.hueOffset + Math.sin(spin) * 30);
 
     ctx.strokeStyle = `hsla(${hue} 100% 74% / ${alpha})`;
@@ -545,7 +552,11 @@ function drawMirrorScatter() {
 function drawLasers() {
   const origin = mirrorOrigin();
   const stageY = state.height * 0.68;
-  const beamDrive = clamp(state.energy * 0.72 + state.peak * 0.58, 0, 1);
+  const beamDrive = clamp(
+    state.energy * 0.6 + state.peak * 0.5 + Math.pow(state.smoothedVolume * 2.7, 1.15) * 0.36,
+    0,
+    1
+  );
   const activeBeamCount = Math.floor(lerp(18, BEAM_COUNT, Math.pow(beamDrive, 0.8)));
 
   ctx.save();
@@ -555,7 +566,8 @@ function drawLasers() {
     const beam = beams[index];
     const layerScale =
       beam.layer === "front" ? 1.24 : beam.layer === "mid" ? 1 : 0.74;
-    const speedBoost = 0.5 + state.energy * 2.5 + state.peak * 3.1;
+    const speedBoost =
+      0.45 + state.energy * 2.3 + state.peak * 2.9 + state.smoothedVolume * 5.4;
     beam.life += 0.012 * beam.speed * speedBoost;
 
     const sweep =
@@ -576,10 +588,14 @@ function drawLasers() {
     const lineWidth =
       beam.width *
       layerScale *
-      (0.8 + state.energy * 1.9 + state.peak * 1.2) *
+      (0.76 + state.energy * 1.7 + state.peak * 1.15 + state.smoothedVolume * 1.35) *
       perspective;
     const alpha = clamp(
-      0.14 + beam.brightness * 0.26 + state.energy * 0.34 + state.peak * 0.18,
+      0.14 +
+        beam.brightness * 0.24 +
+        state.energy * 0.3 +
+        state.peak * 0.16 +
+        state.smoothedVolume * 0.22,
       0.12,
       0.95
     );
@@ -708,7 +724,9 @@ function drawVisualizer() {
     visualizerLevels[index] = lerp(visualizerLevels[index], target, 0.28);
 
     const level = visualizerLevels[index];
-    const height = 14 + level * maxHeight * (0.7 + state.peak * 0.2);
+    const height =
+      12 +
+      level * maxHeight * (0.64 + state.peak * 0.18 + state.smoothedVolume * 0.55);
     const x = baseX + index * (barWidth + barGap);
     const y = baseY - height;
     const hue = wrapHue(
@@ -727,7 +745,7 @@ function drawVisualizer() {
     ctx.shadowColor = `hsla(${hue} 100% 70% / 0.35)`;
     ctx.fillRect(x, y, barWidth, height);
 
-    ctx.fillStyle = `rgba(255, 255, 255, ${0.4 + state.peak * 0.18})`;
+    ctx.fillStyle = `rgba(255, 255, 255, ${0.34 + state.peak * 0.16 + state.smoothedVolume * 0.22})`;
     ctx.fillRect(x, y, barWidth, Math.max(2, 2 + level * 4));
   }
 
