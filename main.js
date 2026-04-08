@@ -265,10 +265,11 @@ function updateEnergy(delta) {
   updateFallbackEnergy(delta);
 
   state.smoothedVolume = lerp(state.smoothedVolume, state.volume, 0.18);
-  const volumeLift = Math.pow(clamp(state.smoothedVolume * 3.2, 0, 1.5), 1.35);
+  const responsiveVolume = clamp((state.smoothedVolume - 0.055) * 4.2, 0, 1.5);
+  const volumeLift = Math.pow(responsiveVolume, 1.45);
 
   const audioImpact =
-    volumeLift * 1.85 + state.smoothedVolume * 2.2 + state.bass * 1.3 + state.mid * 0.82 + state.treble * 0.72;
+    volumeLift * 1.7 + responsiveVolume * 0.95 + state.bass * 1.22 + state.mid * 0.82 + state.treble * 0.72;
   state.runningAudioAverage = lerp(state.runningAudioAverage, audioImpact, 0.032);
 
   const deltaBoost = Math.max(0, audioImpact - state.runningAudioAverage);
@@ -279,7 +280,7 @@ function updateEnergy(delta) {
   );
   const peakTarget = clamp(
     volumeLift * 1.15 +
-      state.smoothedVolume * 1.7 +
+      responsiveVolume * 1.1 +
       state.bass * 1.42 +
       state.spectrumFlux * 1.24 +
       deltaBoost * 2.05 -
